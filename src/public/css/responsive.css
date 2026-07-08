@@ -1,0 +1,25 @@
+@media (max-width: 640px) {
+  .track-header { grid-template-columns: 32px 1fr auto auto 50px; gap: 4px; }
+  .col-toggle { font-size: 9px; letter-spacing: 0; padding: 0 4px; }
+
+  .track-row { grid-template-columns: 32px 1fr auto auto 50px; gap: 4px; padding: 0 14px; }
+  .track-artist, .track-album { display: none; }
+  .track-sub { display: block !important; }
+
+  .track-header { padding: 10px 14px; }
+  .group-header { padding: 8px 14px; font-size: 13px; }
+  .group-subheader { padding: 6px 14px 6px 28px; font-size: 11px; }
+  header { padding: 10px 10px 10px; gap: 6px; }
+  .logo { font-size: 18px; }
+  .header-right { gap: 6px; }
+  #search { width: 100px; min-width: 60px; flex: 1; }
+  #search:focus { width: 130px; }
+  #track-count { display: none; }
+
+  #player-bar { padding: 8px 14px 10px; gap: 6px; grid-template-rows: 48px auto auto; }
+  #visualizer { height: 48px; }
+  .player-top { flex-wrap: wrap; gap: 6px; }
+  .now-playing { flex: 0 0 100%; }
+  .player-controls { justify-content: center; width: 100%; }
+  .volume-wrap { display: none; }
+}

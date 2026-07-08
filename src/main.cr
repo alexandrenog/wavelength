@@ -1,21 +1,21 @@
 require "kemal"
-require "json"
-require "yaml"
-require "./config"
-require "./scanner"
+require "./configuration/**"
+require "./classes/**"
 
 # Load config before routes (routes reference AppConfig / Scanner)
 AppConfig.load("config/config.yml")
 Scanner.start
 
-# ── Routes ────────────────────────────────────────────────────────────────────
-require "./routes/page"
-require "./routes/api/tracks"
-require "./routes/api/rescan"
-require "./routes/api/audio"
-require "./routes/static"
+# ── Actions ────────────────────────────────────────────────────────────────────
+require "./actions/base/base_action"
+require "./actions/**"
+
+# ── Register all action routes ────────────────────────────────────────────────
+register_actions
+
+Kemal.config.logging = false
 
 Kemal.run do |config|
   server = config.server.not_nil!
-  server.bind_tcp "0.0.0.0", AppConfig.port
+  server.bind_tcp AppConfig.host, AppConfig.port
 end

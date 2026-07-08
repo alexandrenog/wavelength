@@ -42,6 +42,9 @@ COPY --from=builder /build/wavelength ./wavelength
 COPY --from=builder /build/src/public/ ./src/public/
 COPY config/ ./config/
 
+# Ensure static assets are readable by the non-root user
+RUN chmod -R a+rX ./src/public/
+
 # Music is mounted at runtime — create the default mount point
 RUN mkdir -p /music
 

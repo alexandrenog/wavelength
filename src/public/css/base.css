@@ -1,0 +1,33 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --surface: #1e1e28;
+  --surface2: #262633;
+  --border: #2e2e3e;
+  --accent: #c8fa5f;
+  --accent2: #7b6cfa;
+  --accent3: #fa6c6c;
+  --text: #e8e8f0;
+  --text2: #8888aa;
+  --text3: rgb(199, 206, 199);
+  --radius: 14px;
+  --player-h: 96px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  overflow: hidden;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100dvh;
+}

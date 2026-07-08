@@ -1,0 +1,128 @@
+#player-bar {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-rows: 64px auto auto;
+  padding: 12px 24px 14px;
+  gap: 10px;
+  position: relative;
+  z-index: 20;
+}
+
+.player-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.now-playing {
+  flex: 1;
+  min-width: 0;
+}
+
+.np-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-sub {
+  font-size: 11px;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ctrl {
+  background: none;
+  border: none;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 6px;
+  border-radius: 8px;
+  transition: color .15s, background .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+.ctrl:hover { color: var(--text); background: var(--surface); }
+
+.ctrl.play-pause {
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.ctrl.play-pause:hover { background: #d9ff7a; }
+
+.ctrl.active { color: var(--accent); }
+
+.volume-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.vol-icon { font-size: 14px; color: var(--text3); }
+
+.seek-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.time-label {
+  font-size: 11px;
+  color: var(--text3);
+  width: 38px;
+  flex-shrink: 0;
+}
+
+.time-label.right { text-align: right; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--border);
+  cursor: pointer;
+  outline: none;
+}
+
+input[type=range].seek-bar { --prog: 0%; background: linear-gradient(to right, var(--accent) var(--prog), var(--border) var(--prog)); }
+input[type=range].vol-bar  { width: 80px; flex: none; --prog: 100%; background: linear-gradient(to right, var(--accent2) var(--prog), var(--border) var(--prog)); }
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+  transition: transform .1s;
+}
+
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--text); border: none; cursor: pointer; }

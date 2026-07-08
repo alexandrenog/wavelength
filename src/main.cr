@@ -3,13 +3,17 @@ require "json"
 require "yaml"
 require "./config"
 require "./scanner"
-require "./routes"
 
-# Load config
+# Load config before routes (routes reference AppConfig / Scanner)
 AppConfig.load("config/config.yml")
-
-# Start background scanner
 Scanner.start
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+require "./routes/page"
+require "./routes/api/tracks"
+require "./routes/api/rescan"
+require "./routes/api/audio"
+require "./routes/static"
 
 Kemal.run do |config|
   server = config.server.not_nil!

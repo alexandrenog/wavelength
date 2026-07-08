@@ -1,15 +1,3 @@
-# Wavelength – music player configuration
-# ────────────────────────────────────────
-
-# Absolute path (or Docker volume mount path) to the folder containing
-# your audio files. Sub-folders are scanned recursively.
-# Supported formats: mp3, wma, m4a, ogg, flac
-music_path: /home/alexandre/code/crystal-music-player/music
-
-# TCP port the web server listens on inside the container.
-# Map it with Docker: "3000:3000"
+music_path: "/home/alexandre/code/crystal-music-player/music"
 port: 3000
-
-# How often (in seconds) the music folder is re-scanned for new files.
-# Use the ⟳ button in the UI for an immediate rescan.
 scan_interval: 60

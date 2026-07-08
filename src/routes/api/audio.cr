@@ -9,26 +9,6 @@ MIME_TYPES = {
   "flac" => "audio/flac",
 }
 
-# Serve the single-page application
-get "/" do |env|
-  env.response.content_type = "text/html; charset=utf-8"
-  render "src/views/index.ecr"
-end
-
-# List all tracks as JSON
-get "/api/tracks" do |env|
-  env.response.content_type = "application/json"
-  Scanner.tracks.to_json
-end
-
-# Rescan on demand
-post "/api/rescan" do |env|
-  Scanner.scan
-  env.response.content_type = "application/json"
-  {count: Scanner.tracks.size}.to_json
-end
-
-# Stream audio file with Range support for mobile seek
 get "/audio/:id" do |env|
   id = env.params.url["id"]
   track = Scanner.find(id)
@@ -38,7 +18,6 @@ get "/audio/:id" do |env|
     next "Track not found"
   end
 
-  # Build absolute path and verify it stays inside music_path (path traversal guard)
   music_path = AppConfig.music_path
   abs_path = File.expand_path(File.join(music_path, track.filename))
 
@@ -57,7 +36,6 @@ get "/audio/:id" do |env|
   range_header = env.request.headers["Range"]?
 
   if range_header
-    # Parse "bytes=start-end"
     if range_header =~ /bytes=(\d*)-(\d*)/
       range_start = $1.empty? ? 0_i64 : $1.to_i64
       range_end = $2.empty? ? file_size - 1 : $2.to_i64

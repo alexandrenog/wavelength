@@ -37,8 +37,9 @@ WORKDIR /app
 # Install runtime dependencies (ffprobe for audio metadata extraction)
 RUN apk add --no-cache ffmpeg
 
-# Copy binary and config
+# Copy binary, static assets, and config
 COPY --from=builder /build/wavelength ./wavelength
+COPY --from=builder /build/src/public/ ./src/public/
 COPY config/ ./config/
 
 # Music is mounted at runtime — create the default mount point

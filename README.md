@@ -26,8 +26,9 @@ Runs as a Docker container; stream your local library from any browser — inclu
 
 ```yaml
 # config/config.yml
+host: 0.0.0.0             # bind address (default: 0.0.0.0)
 music_path: /music        # path inside the container (keep this)
-port: 3000
+port: 3000                # or override via the HOST env var
 scan_interval: 60         # seconds between automatic rescans
 ```
 
@@ -67,11 +68,21 @@ The more structured your names, the richer the display:
 
 ## Development (without Docker)
 
-Requirements: Crystal ≥ 1.10, OpenSSL, libyaml
+Requirements: Crystal ≥ 1.10, OpenSSL, libyaml, ffprobe (optional — filename-based fallback)
 
 ```bash
+# Build
 shards install
-crystal run src/main.cr
+crystal build src/main.cr -o wavelength
+
+# Or use the build script (handles shards + ffprobe check)
+./build.sh
+
+# Run
+./wavelength
+
+# Hot-reload static assets into a running container
+./reload-static.sh        # defaults to the "wavelength" container
 ```
 
 ---

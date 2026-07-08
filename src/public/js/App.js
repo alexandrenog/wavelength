@@ -169,8 +169,8 @@ export class App {
       if (event.code === 'Space') { event.preventDefault(); this.btnPlay.click(); }
       if (event.code === 'ArrowRight') this.audio.currentTime = Math.min(this.audio.currentTime + 5, this.audio.duration || 0);
       if (event.code === 'ArrowLeft') this.audio.currentTime = Math.max(this.audio.currentTime - 5, 0);
-      if (event.code === 'ArrowUp') { event.preventDefault(); this.audio.volume = Math.min(this.audio.volume + 0.05, 1); }
-      if (event.code === 'ArrowDown') { event.preventDefault(); this.audio.volume = Math.max(this.audio.volume - 0.05, 0); }
+      if (event.code === 'ArrowUp') { event.preventDefault(); const v = Math.min(this.audio.volume + 0.05, 1); this.audio.volume = v; this.volBar.value = v; this.volBar.style.setProperty('--prog', v * 100 + '%'); }
+      if (event.code === 'ArrowDown') { event.preventDefault(); const v = Math.max(this.audio.volume - 0.05, 0); this.audio.volume = v; this.volBar.value = v; this.volBar.style.setProperty('--prog', v * 100 + '%'); }
     });
   }
 

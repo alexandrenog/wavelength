@@ -10,11 +10,12 @@ services:
       - "3000:3000"
     volumes:
       # ── Music library ──────────────────────────────────────────────────────
-      # Replace the left side with the absolute path to your music folder.
+      # Set MUSIC_PATH in .env or docker-compose.override.yml to override.
+      # Or replace the left side with the absolute path to your music folder
       # Examples:
       #   - /home/alice/Music:/music:ro
       #   - /mnt/nas/music:/music:ro
-      - /home/alexandre/code/crystal-music-player/music:/music:ro
+      - ${MUSIC_PATH:-./music}:/music:ro      
 
       # ── Config ────────────────────────────────────────────────────────────
       # Mount your edited config so you can tweak settings without rebuilding.

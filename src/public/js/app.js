@@ -19,6 +19,10 @@ const visCtx = visCanvas.getContext('2d');
 const toggleArtist = document.getElementById('toggle-artist');
 const toggleAlbum = document.getElementById('toggle-album');
 
+// ── SVG icons (used by innerHTML to avoid repeated definitions) ──
+const PLAY_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+const PAUSE_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+
 let tracks = [];
 let filtered = [];
 let currentIdx = -1;
@@ -143,12 +147,12 @@ function updateNowPlaying(t) {
 }
 
 audio.addEventListener('play', () => {
-  btnPlay.textContent = '⏸';
+  btnPlay.innerHTML = PAUSE_SVG;
   setupVisualizer();
 });
 
 audio.addEventListener('pause', () => {
-  btnPlay.textContent = '▶';
+  btnPlay.innerHTML = PLAY_SVG;
 });
 
 audio.addEventListener('ended', () => {

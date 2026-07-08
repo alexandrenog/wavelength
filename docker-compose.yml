@@ -1,0 +1,32 @@
+services:
+  wavelength:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wavelength
+    restart: unless-stopped
+    ports:
+      # host:container — change the left side if you want a different host port
+      - "3000:3000"
+    volumes:
+      # ── Music library ──────────────────────────────────────────────────────
+      # Replace the left side with the absolute path to your music folder.
+      # Examples:
+      #   - /home/alice/Music:/music:ro
+      #   - /mnt/nas/music:/music:ro
+      - /path/to/your/music:/music:ro
+
+      # ── Config ────────────────────────────────────────────────────────────
+      # Mount your edited config so you can tweak settings without rebuilding.
+      - ./config/config.yml:/app/config/config.yml:ro
+    environment:
+      # Override the music path via env if you prefer (optional).
+      # This takes precedence over config.yml when set.
+      # MUSIC_PATH: /music
+      TZ: UTC
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/tracks"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

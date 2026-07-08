@@ -18,6 +18,8 @@ module AppConfig
     else
       STDERR.puts "Config file not found at #{path}, using defaults."
     end
+    # Environment variables override config file
+    @@music_path = ENV["MUSIC_PATH"] if ENV.has_key?("MUSIC_PATH")
     puts "Music path: #{@@music_path}"
     puts "Port: #{@@port}"
     puts "Scan interval: #{@@scan_interval}s"

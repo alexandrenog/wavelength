@@ -34,8 +34,10 @@ FROM alpine:3.19
 
 WORKDIR /app
 
-# Copy binary and views (ECR templates are embedded at build time via macro,
-# but we also ship them for reference)
+# Install runtime dependencies (ffprobe for audio metadata extraction)
+RUN apk add --no-cache ffmpeg
+
+# Copy binary and config
 COPY --from=builder /build/wavelength ./wavelength
 COPY config/ ./config/
 

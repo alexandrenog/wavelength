@@ -54,21 +54,25 @@ module Scanner
       next unless AppConfig::SUPPORTED_EXTENSIONS.includes?(ext)
 
       filename = File.basename(file_path)
-      # Strip extension to get a display name
       base = File.basename(file_path, ext)
+      size = File.size(file_path)
 
-      # Try to parse "Artist - Title" or "Artist - Album - Title" patterns
+      rel = file_path.lchop(music_path).lchop("/")
+      id = rel.gsub(/[^a-zA-Z0-9]/, "_")
+
+      meta = read_metadata(file_path)
+
+      # Parse filename as fallback
       parts = base.split(" - ", limit: 3).map(&.strip)
-      title, artist, album = case parts.size
+      f_title, f_artist, f_album = case parts.size
       when 3 then {parts[2], parts[0], parts[1]}
       when 2 then {parts[1], parts[0], "Unknown Album"}
       else        {base, "Unknown Artist", "Unknown Album"}
       end
 
-      size = File.size(file_path)
-      # Use a stable hash as ID based on relative path
-      rel = file_path.lchop(music_path).lchop("/")
-      id = rel.gsub(/[^a-zA-Z0-9]/, "_")
+      title = meta.try { |m| m[:title] }.presence || f_title
+      artist = meta.try { |m| m[:artist] }.presence || f_artist
+      album = meta.try { |m| m[:album] }.presence || f_album
 
       new_tracks << Track.new(
         id: id,
@@ -85,5 +89,41 @@ module Scanner
 
     @@mutex.synchronize { @@tracks = new_tracks }
     puts "Scanned #{new_tracks.size} tracks."
+  end
+
+  private def read_metadata(file_path : String) : NamedTuple(title: String?, artist: String?, album: String?)?
+    begin
+      stdout = IO::Memory.new
+      result = Process.run(
+        "ffprobe",
+        ["-v", "quiet", "-print_format", "json", "-show_format", file_path],
+        output: stdout
+      )
+      return nil unless result.success?
+      stdout.rewind
+      output = stdout.gets_to_end
+
+      data = JSON.parse(output)
+      tags = data.dig?("format", "tags")
+      return nil unless tags
+
+      title = guess_tag(tags, {"title", "TIT2", "©nam"})
+      artist = guess_tag(tags, {"artist", "TPE1", "©ART"})
+      album = guess_tag(tags, {"album", "TALB", "©alb"})
+
+      # Return what we found — nil fields will be filled from filename
+      {title: title, artist: artist, album: album}
+    rescue
+      nil
+    end
+  end
+
+  private def guess_tag(tags : JSON::Any, keys : Enumerable(String)) : String?
+    keys.each do |key|
+      if (val = tags[key]?) && (s = val.to_s.strip; !s.empty?)
+        return s
+      end
+    end
+    nil
   end
 end

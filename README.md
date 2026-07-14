@@ -26,11 +26,13 @@ Runs as a Docker container; stream your local library from any browser — inclu
 
 ```yaml
 # config/config.yml
-host: 0.0.0.0             # bind address (default: 0.0.0.0)
-music_path: /music        # path inside the container (keep this)
-port: 3000                # or override via the HOST env var
-scan_interval: 60         # seconds between automatic rescans
+host: 0.0.0.0       # bind address (default 0.0.0.0)
+port: 3000           # or override via the HOST env var
+scan_interval: 60    # seconds between automatic rescans
 ```
+
+> `music_path` is set via the `MUSIC_PATH` environment variable (docker-compose or `.env`).  
+> Default inside the container is `/music`.
 
 ### 2. Edit docker-compose.yml
 

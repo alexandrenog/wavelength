@@ -38,6 +38,7 @@ export class App {
       onTrackChange: (track, idx) => this._onTrackChange(track, idx),
       onPlay: () => { this.btnPlay.innerHTML = PAUSE_SVG; this.visualizer.start(); },
       onPause: () => { this.btnPlay.innerHTML = PLAY_SVG; },
+      onTranscodeStart: (track, idx) => this._onTranscodeStart(track, idx),
     });
 
     this.trackList = new TrackList(this.trackListEl, {
@@ -70,6 +71,43 @@ export class App {
         album: track.album,
       });
     }
+  }
+
+  _onTranscodeStart(track, idx) {
+    this.trackList.setCurrentIndex(idx);
+    this.npTitle.textContent = track.title;
+    this.npSub.textContent = `${track.artist} — ${track.album} (transcoding…)`;
+    document.title = `${track.title} · Wavelength`;
+    const row = this.trackList.rows[idx];
+    if (row) row.setTranscoding(track.id);
+    this._ensureTranscodePoller(track.id);
+  }
+
+  _ensureTranscodePoller(trackId) {
+    if (this._transcodePollers && this._transcodePollers[trackId]) return;
+    if (!this._transcodePollers) this._transcodePollers = {};
+    this._transcodePollers[trackId] = true;
+    this._startTranscodePoller(trackId);
+  }
+
+  async _startTranscodePoller(trackId) {
+    for (;;) {
+      if (!this._transcodePollers?.[trackId]) break;
+      const res = await fetch(`/api/transcode/${encodeURIComponent(trackId)}/progress`);
+      const { progress } = await res.json();
+      const row = this._findTrackRow(trackId);
+      if (row) row.setTranscodeProgress(progress);
+      if (progress >= 100) {
+        if (row) row.setTranscoded();
+        delete this._transcodePollers[trackId];
+        break;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  _findTrackRow(id) {
+    return this.trackList.rows.find(r => r.track.id === id);
   }
 
   _updateCount() {

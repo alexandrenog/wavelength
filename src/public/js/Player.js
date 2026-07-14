@@ -4,7 +4,7 @@ adoptStylesheet('player.css');
 
 // Player.js
 export class Player {
-  constructor(audioEl, { onTrackChange, onPlay, onPause } = {}) {
+  constructor(audioEl, { onTrackChange, onPlay, onPause, onTranscodeStart, onTranscodeProgress, onTranscodeDone } = {}) {
     this.audio = audioEl;
     this.playlist = [];
     this.currentIdx = -1;
@@ -14,6 +14,9 @@ export class Player {
     this.onTrackChange = onTrackChange;
     this.onPlay = onPlay;
     this.onPause = onPause;
+    this.onTranscodeStart = onTranscodeStart;
+    this.onTranscodeProgress = onTranscodeProgress;
+    this.onTranscodeDone = onTranscodeDone;
 
     this.audio.addEventListener('play', () => this.onPlay?.());
     this.audio.addEventListener('pause', () => this.onPause?.());
@@ -36,13 +39,38 @@ export class Player {
     return this.repeat;
   }
 
-  playIndex(idx) {
+  async playIndex(idx) {
     if (idx < 0 || idx >= this.playlist.length) return;
-    this.currentIdx = idx;
     const track = this.playlist[idx];
-    this.audio.src = `/audio/${encodeURIComponent(track.id)}`;
-    this.audio.play();
+    this._pendingId = track.id;
+    this.currentIdx = idx;
+
+    if (track.needs_transcoding) {
+      const res = await fetch(`/api/transcode/${encodeURIComponent(track.id)}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'started') {
+        this.onTranscodeStart?.(track, idx);
+        await this._waitTranscode(track.id);
+        if (this._pendingId !== track.id) return;
+      }
+      this.onTranscodeDone?.(track, idx);
+    }
+
+    if (this._pendingId !== track.id) return;
     this.onTrackChange?.(track, idx);
+    this.audio.src = `/audio/${encodeURIComponent(track.id)}`;
+    this.audio.play().catch(() => {});
+  }
+
+  async _waitTranscode(id) {
+    for (;;) {
+      const res = await fetch(`/api/transcode/${encodeURIComponent(id)}/progress`);
+      const data = await res.json();
+      if (this._pendingId !== id) break;
+      this.onTranscodeProgress?.(data.progress);
+      if (data.progress >= 100) break;
+      await new Promise(r => setTimeout(r, 500));
+    }
   }
 
   playPause() {

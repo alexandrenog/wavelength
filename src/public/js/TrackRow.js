@@ -28,11 +28,39 @@ export class TrackRow {
       ]),
       h('div', { class: 'track-artist' }, [track.artist]),
       h('div', { class: 'track-album' }, [track.album]),
-      h('div', { class: 'track-ext' }, [track.ext]),
+      h('div', { class: 'track-ext' + (track.needs_transcoding && !track.transcoded ? ' needs-transcode' : '') }, [track.ext]),
     ]);
   }
 
   setActive(active) {
     this.el.classList.toggle('active', active);
+  }
+
+  setTranscoding(id) {
+    const extEl = this.el.querySelector('.track-ext');
+    if (!extEl) return;
+    extEl.classList.remove('needs-transcode');
+    extEl.classList.add('transcode-cell');
+    extEl.innerHTML = '';
+    extEl.append(
+      Object.assign(document.createElement('div'), { className: 'transcode-progress-bar', style: 'width:0%' }),
+      Object.assign(document.createElement('span'), { textContent: '0%' })
+    );
+  }
+
+  setTranscoded() {
+    const extEl = this.el.querySelector('.track-ext');
+    if (!extEl) return;
+    extEl.classList.remove('transcode-cell');
+    extEl.textContent = this.track.ext;
+  }
+
+  setTranscodeProgress(pct) {
+    const cell = this.el.querySelector('.transcode-cell');
+    if (!cell) return;
+    const bar = cell.querySelector('.transcode-progress-bar');
+    const label = cell.querySelector('span');
+    if (bar) bar.style.width = pct + '%';
+    if (label) label.textContent = pct + '%';
   }
 }

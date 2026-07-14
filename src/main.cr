@@ -1,10 +1,11 @@
 require "kemal"
 require "./configuration/**"
 require "./classes/**"
+require "./service/**"
 
 # Load config before routes (routes reference AppConfig / Scanner)
 AppConfig.load("config/config.yml")
-Scanner.start
+Scanner.start_periodic_scan
 
 # ── Actions ────────────────────────────────────────────────────────────────────
 require "./actions/base/base_action"

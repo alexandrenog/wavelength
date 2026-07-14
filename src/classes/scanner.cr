@@ -10,8 +10,12 @@ struct Track
   property filename : String
   property ext : String
   property size : Int64
+  property codec : String
+  property duration : Float64
+  property needs_transcoding : Bool
+  property transcoded : Bool
 
-  def initialize(@id, @title, @artist, @album, @filename, @ext, @size)
+  def initialize(@id, @title, @artist, @album, @filename, @ext, @size, @codec = "aac", @duration = 0.0, @needs_transcoding = false, @transcoded = false)
   end
 end
 
@@ -21,25 +25,35 @@ module Scanner
   @@tracks : Array(Track) = [] of Track
   @@mutex = Mutex.new
 
-  def tracks : Array(Track)
+  def all : Array(Track)
     @@mutex.synchronize { @@tracks.dup }
   end
 
-  def find(id : String) : Track?
-    @@mutex.synchronize { @@tracks.find { |t| t.id == id } }
-  end
-
-  def start
-    scan
-    spawn do
-      loop do
-        sleep AppConfig.scan_interval.seconds
-        scan
+  def all_with_transcode_status : Array(Track)
+    @@mutex.synchronize do
+      @@tracks.map do |t|
+        next t unless t.needs_transcoding
+        path = cache_path_for(t.filename)
+        Track.new(id: t.id, title: t.title, artist: t.artist, album: t.album, filename: t.filename, ext: t.ext, size: t.size, codec: t.codec, duration: t.duration, needs_transcoding: t.needs_transcoding, transcoded: File.exists?(path))
       end
     end
   end
 
-  def scan
+  def find_by_id(id : String) : Track?
+    @@mutex.synchronize { @@tracks.find { |t| t.id == id } }
+  end
+
+  def start_periodic_scan
+    scan_music_directory
+    spawn do
+      loop do
+        sleep AppConfig.scan_interval.seconds
+        scan_music_directory
+      end
+    end
+  end
+
+  def scan_music_directory
     music_path = AppConfig.music_path
     unless Dir.exists?(music_path)
       STDERR.puts "Music directory does not exist: #{music_path}"
@@ -60,7 +74,7 @@ module Scanner
       rel = file_path.lchop(music_path).lchop("/")
       id = rel.gsub(/[^a-zA-Z0-9]/, "_")
 
-      meta = read_metadata(file_path)
+      meta = probe_metadata(file_path)
 
       # Parse filename as fallback
       parts = base.split(" - ", limit: 3).map(&.strip)
@@ -74,6 +88,15 @@ module Scanner
       artist = meta.try { |m| m[:artist] }.presence || f_artist
       album = meta.try { |m| m[:album] }.presence || f_album
 
+      codec = meta.try { |m| m[:codec] }.presence || "unknown"
+      duration = meta.try { |m| m[:duration] } || 0.0
+      needs_transcoding = AppConfig::UNSUPPORTED_CODECS.includes?(codec)
+      transcoded = false
+      if needs_transcoding
+        path = cache_path_for(rel)
+        transcoded = File.exists?(path)
+      end
+
       new_tracks << Track.new(
         id: id,
         title: title,
@@ -81,7 +104,11 @@ module Scanner
         album: album,
         filename: rel,
         ext: ext.lchop("."),
-        size: size
+        size: size,
+        codec: codec,
+        duration: duration,
+        needs_transcoding: needs_transcoding,
+        transcoded: transcoded
       )
     end
 
@@ -91,12 +118,17 @@ module Scanner
     puts "Scanned #{new_tracks.size} tracks."
   end
 
-  private def read_metadata(file_path : String) : NamedTuple(title: String?, artist: String?, album: String?)?
+  def cache_path_for(filename : String) : String
+    cache_key = filename.gsub(/[^a-zA-Z0-9._-]/, "_")
+    File.join(AppConfig::CACHE_DIR, "#{cache_key}.mp3")
+  end
+
+  private def probe_metadata(file_path : String) : NamedTuple(title: String?, artist: String?, album: String?, codec: String?, duration: Float64)?
     begin
       stdout = IO::Memory.new
       result = Process.run(
         "ffprobe",
-        ["-v", "quiet", "-print_format", "json", "-show_format", file_path],
+        ["-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", file_path],
         output: stdout
       )
       return nil unless result.success?
@@ -104,21 +136,29 @@ module Scanner
       output = stdout.gets_to_end
 
       data = JSON.parse(output)
+
+      codec = data.dig?("streams")
+        .try { |streams|
+          streams.as_a.find { |s| s["codec_type"]?.try(&.as_s) == "audio" }
+            .try { |s| s["codec_name"]?.try(&.as_s) }
+        }
+
+      duration = data.dig?("format", "duration").try(&.as_s).try(&.to_f) || 0.0
+
       tags = data.dig?("format", "tags")
       return nil unless tags
 
-      title = guess_tag(tags, {"title", "TIT2", "©nam"})
-      artist = guess_tag(tags, {"artist", "TPE1", "©ART"})
-      album = guess_tag(tags, {"album", "TALB", "©alb"})
+      title = find_first_tag(tags, {"title", "TIT2", "©nam"})
+      artist = find_first_tag(tags, {"artist", "TPE1", "©ART"})
+      album = find_first_tag(tags, {"album", "TALB", "©alb"})
 
-      # Return what we found — nil fields will be filled from filename
-      {title: title, artist: artist, album: album}
+      {title: title, artist: artist, album: album, codec: codec, duration: duration}
     rescue
       nil
     end
   end
 
-  private def guess_tag(tags : JSON::Any, keys : Enumerable(String)) : String?
+  private def find_first_tag(tags : JSON::Any, keys : Enumerable(String)) : String?
     keys.each do |key|
       if (val = tags[key]?) && (s = val.to_s.strip; !s.empty?)
         return s

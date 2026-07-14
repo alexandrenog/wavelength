@@ -10,7 +10,7 @@ class StaticAction < BaseAction
     if (type = ContentType.isExtensionAllowedForPublicAccess?(extension))
       full = File.join(STATIC_DIR, path)
       if File.exists?(full)
-        setContentType(http_context, type)
+        setContentType(http_context.response, type)
         File.read(full)
       else
         http_context.response.status_code = 404

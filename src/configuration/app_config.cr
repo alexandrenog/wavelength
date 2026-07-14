@@ -3,6 +3,8 @@ require "yaml"
 module AppConfig
   extend self
 
+  CACHE_DIR = "/tmp/wavelength"
+  UNSUPPORTED_CODECS = {"eac3", "truehd", "ac3", "dts"}
   SUPPORTED_EXTENSIONS = {".mp3", ".wma", ".m4a", ".ogg", ".flac"}
 
   @@host : String = "0.0.0.0"

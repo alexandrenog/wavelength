@@ -1,3 +1,2 @@
-music_path: "/home/alexandre/code/crystal-music-player/music"
 port: 3000
 scan_interval: 60
